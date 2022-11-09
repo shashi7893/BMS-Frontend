@@ -5,14 +5,18 @@ import Login from "./Login";
 const LoginContainer = () => {
 
     const navigate = useNavigate();
-    const [user, setUser] = useState({
+    const [userInput, setUserInput] = useState({
         username: '',
         password: '',
     });
+
     const [errors, setErrors] = useState({
         username: '',
         password: '',
     });
+
+    const [errorMessage, setErrorMessage] = useState('');
+
     const [isLoading, setIsLoading] = useState(false);
 
     const validate = (name, value) => {
@@ -41,27 +45,37 @@ const LoginContainer = () => {
         ));
     }
 
-    const handleChange = (e) => {
-        e.preventDefault();
-        setUser(prevUser => (
+    const usernameChangeHandler = (event) => {
+        event.preventDefault();
+        setUserInput(prevState => (
             {
-                ...prevUser,
-                [e.target.name]: e.target.value
+                ...prevState,
+                username: event.target.value
             }
         ));
-        validate(e.target.name, e.target.value);
+        validate(event.target.name, event.target.value);
+    }
+
+    const passwordChangeHandler = (event) => {
+        event.preventDefault();
+        setUserInput(prevState => (
+            {
+                ...prevState,
+                password: event.target.value
+            }
+        ));
+        validate(event.target.name, event.target.value);
     }
 
     const  proceedLogin = async () => {
         setIsLoading(true);
-
         try {
             const response = await fetch('http://localhost:8081/api/auth/signin', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body : JSON.stringify({
-                    username: user.username,
-                    password: user.password
+                    username: userInput.username,
+                    password: userInput.password
                 })
             });
 
@@ -74,7 +88,7 @@ const LoginContainer = () => {
             navigate('/dashboard');
             console.log('result is: ', JSON.stringify(result, null, 4));
         } catch (err){
-            setErrors(err.message);
+            setErrorMessage('Username and password do not match');
         } finally {
             setIsLoading(false);
         }
@@ -89,12 +103,14 @@ const LoginContainer = () => {
                 break;
             }
         }
-        for (const property in user) {
-            if(user[property].length === 0){
+
+        for (const property in userInput) {
+            if(userInput[property].length === 0){
                 isValid = false;
                 break;
             }
         }
+
         if(isValid){
             proceedLogin();
         }else{
@@ -104,9 +120,11 @@ const LoginContainer = () => {
 
     return (<>
             <Login
-                user = {user}
+                userInput = {userInput}
                 errors = {errors}
-                handleChange = {handleChange}
+                errorMessage = {errorMessage}
+                handleUsernameChange = {usernameChangeHandler}
+                handlePasswordChange = {passwordChangeHandler}
                 handleSubmit = {handleSubmit}
             />
         </>);
